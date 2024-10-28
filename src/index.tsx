@@ -8,15 +8,13 @@ import { neynar } from 'frog/hubs';
 export const app = new Frog({
   title: 'Voting Frame',
   imageAspectRatio: '1:1',
-  hub: neynar({ apiKey: '8CC4FE87-3950-4481-BAD2-20475D7F7B68' }),
+  hub: neynar({ apiKey: 'YOUR_API_KEY_HERE' }), // حتماً کلید API را به درستی تنظیم کنید
   verify: 'silent',
 });
 
 // بارگذاری پایگاه داده
 const db = await setupDatabase();
-
-// بارگذاری آرای اولیه
-let votes = await loadVotes(db); 
+let votes = await loadVotes(db); // بارگذاری آرای اولیه
 
 app.use('/*', serveStatic({ root: './public' }));
 
@@ -24,8 +22,17 @@ app.use('/*', serveStatic({ root: './public' }));
 app.frame('/', async (c) => {
   const { status, buttonValue, verified } = c;
 
+  // بررسی وضعیت اعتبارسنجی
   if (!verified) {
-    console.log('Frame verification failed');
+    console.error('Frame verification failed');
+    return c.res({
+      image: (
+        <div style={{ color: 'red', textAlign: 'center' }}>
+          <h1>Verification Failed</h1>
+          <p>Please try again later.</p>
+        </div>
+      )
+    });
   }
 
   const hasSelected = buttonValue === 'vote';
@@ -37,7 +44,7 @@ app.frame('/', async (c) => {
     ? 'https://i.imgur.com/be4kQO3.png' 
     : 'https://i.imgur.com/bLVqRNb.png'; 
 
-  // بررسی دکمه‌های رای‌گیری و ذخیره‌سازی رای‌ها
+  // بررسی دکمه‌های رای‌گیری
   if (buttonValue === 'harris') {
     votes.harris += 1;
   } else if (buttonValue === 'trump') {
@@ -58,7 +65,7 @@ app.frame('/', async (c) => {
           position: 'relative',
           width: '100%',
           height: '100%',
-          background: showThirdPage ? 'black' : hasSelected ? 'black' : (status === 'response' ? 'linear-gradient(to right, #432889, #17101F)' : 'black'),
+          background: showThirdPage ? 'black' : (status === 'response' ? 'linear-gradient(to right, #432889, #17101F)' : 'black'),
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -86,19 +93,13 @@ app.frame('/', async (c) => {
             fontFamily: 'Arial',
             letterSpacing: '-0.025em',
             lineHeight: 1.4,
-            whiteSpace: 'pre-wrap',
             display: 'flex',
             gap: '335px',
           }}
         >
           {showThirdPage 
-            ? <>
-                <span>{trumpPercent}</span> 
-                <span>{harrisPercent}</span>
-              </>
-            : hasSelected 
-            ? "" 
-            : ""}
+            ? <><span>{trumpPercent}</span><span>{harrisPercent}</span></>
+            : hasSelected ? "" : ""}
         </div>
       </div>
     ),
